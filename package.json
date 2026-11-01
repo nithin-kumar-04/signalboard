@@ -1,0 +1,19 @@
+{
+  "name": "signalboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A small, dependency-free marketing analytics dashboard",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "marketing",
+    "analytics",
+    "dashboard",
+    "roas",
+    "vanilla-js",
+    "csv"
+  ],
+  "license": "MIT"
+}

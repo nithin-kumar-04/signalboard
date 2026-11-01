@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signalboard · Marketing analytics</title>
+  <meta name="description" content="Signalboard is a small, dependency-free marketing analytics dashboard. Explore spend, revenue, ROAS, CPA and funnel metrics - or upload your own CSV.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230ea5e9'/%3E%3Cpath d='M7 23V9M12 23V14M17 23V6M22 23V17M27 23V11' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20V10M9 20V14M14 20V4M19 20V8"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Signalboard</h1>
+          <p>Marketing analytics, minus the guesswork</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <span class="dataset-badge" id="datasetBadge">Sample data</span>
+        <button type="button" class="btn ghost" id="sampleBtn">Use sample data</button>
+        <button type="button" class="btn ghost" id="uploadBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"></path></svg>
+          Upload CSV
+        </button>
+        <input type="file" id="csvInput" accept=".csv,text/csv" hidden>
+        <button type="button" class="btn primary" id="exportBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"></path><path d="M7 11l5 5 5-5"></path><path d="M4 20h16"></path></svg>
+          Export
+        </button>
+      </div>
+    </header>
+
+    <section class="filters card" aria-label="Dashboard filters">
+      <div class="filter-group">
+        <div class="segmented" role="group" aria-label="Preset date range">
+          <button type="button" data-preset="30d">30D</button>
+          <button type="button" data-preset="90d" class="active">90D</button>
+          <button type="button" data-preset="12m">12M</button>
+          <button type="button" data-preset="all">All</button>
+        </div>
+      </div>
+
+      <div class="filter-group date-range">
+        <label for="startDate">From</label>
+        <input type="date" id="startDate">
+        <span class="date-sep" aria-hidden="true">→</span>
+        <label for="endDate">To</label>
+        <input type="date" id="endDate">
+      </div>
+
+      <div class="filter-group dropdowns">
+        <div class="dropdown" id="ddChannel"></div>
+        <div class="dropdown" id="ddCampaign"></div>
+        <div class="dropdown" id="ddDevice"></div>
+      </div>
+
+      <div class="filter-group filter-tail">
+        <label class="search" for="searchInput">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input type="search" id="searchInput" placeholder="Search campaigns…" autocomplete="off">
+        </label>
+        <button type="button" class="btn ghost small" id="resetBtn">Reset</button>
+      </div>
+    </section>
+
+    <main>
+      <section class="kpis" id="kpis" aria-label="Key metrics"></section>
+
+      <section class="grid-main">
+        <article class="card chart-card">
+          <header class="card-head">
+            <div>
+              <h2>Spend vs. attributed revenue</h2>
+              <p class="card-sub" id="rangeLabel">—</p>
+            </div>
+            <div class="card-actions">
+              <label class="select-wrap" for="granularity">
+                <span class="sr-only">Granularity</span>
+                <select id="granularity">
+                  <option value="auto">Auto</option>
+                  <option value="day">Daily</option>
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                </select>
+              </label>
+            </div>
+          </header>
+          <div id="trendChart" class="chart-host"></div>
+        </article>
+
+        <article class="card chart-card">
+          <header class="card-head">
+            <div>
+              <h2>Spend by channel</h2>
+              <p class="card-sub">Share of filtered ad spend</p>
+            </div>
+          </header>
+          <div id="channelChart" class="donut-host"></div>
+        </article>
+      </section>
+
+      <section class="grid-secondary">
+        <article class="card">
+          <header class="card-head">
+            <div>
+              <h2>Channel efficiency</h2>
+              <p class="card-sub">ROAS by channel</p>
+            </div>
+          </header>
+          <div id="efficiencyBars"></div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div>
+              <h2>Conversion funnel</h2>
+              <p class="card-sub">Impressions to conversions</p>
+            </div>
+          </header>
+          <div id="funnelChart"></div>
+        </article>
+
+        <article class="card">
+          <header class="card-head">
+            <div>
+              <h2>Top campaigns</h2>
+              <p class="card-sub">By attributed revenue</p>
+            </div>
+          </header>
+          <div id="campaignBars"></div>
+        </article>
+      </section>
+
+      <section class="insights" aria-label="Automatically generated insights">
+        <div class="section-head">
+          <h2>What the data says</h2>
+          <p>Generated from the current filters</p>
+        </div>
+        <div class="insight-grid" id="insights"></div>
+      </section>
+
+      <section class="card table-card">
+        <header class="card-head">
+          <div>
+            <h2>Campaign performance</h2>
+            <p class="card-sub" id="tableCount">—</p>
+          </div>
+          <div class="card-actions">
+            <label class="select-wrap" for="pageSize">
+              <span class="select-label">Rows</span>
+              <select id="pageSize">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+          </div>
+        </header>
+        <div class="table-wrap">
+          <table id="campaignTable">
+            <caption class="sr-only">Filtered campaign performance, sortable by column</caption>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <footer class="pager">
+          <span class="muted" id="pageLabel"></span>
+          <div class="pager-actions">
+            <button type="button" class="btn ghost small" id="prevPage">← Prev</button>
+            <button type="button" class="btn ghost small" id="nextPage">Next →</button>
+          </div>
+        </footer>
+      </section>
+    </main>
+
+    <footer class="app-foot">
+      <p>Signalboard runs entirely in your browser. Your CSV never leaves this device.</p>
+      <p class="muted" id="sourceNote">Sample dataset · deterministic demo data</p>
+    </footer>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="assets/marketing.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/charts.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
